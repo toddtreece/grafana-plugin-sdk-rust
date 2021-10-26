@@ -1,0 +1,1 @@
+initSidebarItems({"type":[["ERROR_ACCESS_DENIED","See winapi::shared::winerror::ERROR_ACCESS_DENIED"],["ERROR_MORE_DATA","See winapi::shared::winerror::ERROR_MORE_DATA"],["ERROR_PIPE_BUSY","See winapi::shared::winerror::ERROR_PIPE_BUSY"]]});

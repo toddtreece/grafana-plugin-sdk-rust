@@ -1,0 +1,163 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Functionality for use by backend plugins."><meta name="keywords" content="rust, rustlang, rust-lang, backend"><title>grafana_plugin_sdk::backend - Rust</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc mod"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../grafana_plugin_sdk/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a><h2 class="location">Module backend</h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li><li><a href="#types">Type Definitions</a></li></ul></div><div id="sidebar-vars" data-name="backend" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><h1 class="fqn"><span class="in-band">Module <a href="../index.html">grafana_plugin_sdk</a>::<wbr><a class="mod" href="#">backend</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span><span class="out-of-band"><span id="render-detail"><a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span><a class="srclink" href="../../src/grafana_plugin_sdk/backend/mod.rs.html#1-870" title="goto source code">[src]</a></span></h1><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Functionality for use by backend plugins.</p>
+<p>Backend plugins are executables that expose a gRPC server, which Grafana uses to
+communicate all information. This SDK uses <a href="https://github.com/hyperium/tonic">tonic</a> as its gRPC implementation.</p>
+<p>The basic requirements for a backend plugin are to provide a <code>main</code> function which:</p>
+<ul>
+<li>first, calls the <a href="fn.initialize.html" title="initialize"><code>initialize</code></a> function from this module to initialize the plugin. This <strong>must</strong>
+be done before any other code can output to stdout or stderr!</li>
+<li>performs any setup required by the plugin (such as connecting to databases or initializing any state)</li>
+<li>creates the struct representing the plugin’s services, which should implement one of the various traits exposed
+by this module</li>
+<li>create a <a href="struct.Plugin.html" title="Plugin"><code>Plugin</code></a> to manage the plugin’s lifecycle with Grafana</li>
+<li>use the <code>Plugin::*_service</code> methods to attach your plugin</li>
+<li>begin serving on the listener returned by <code>initialize</code> using <a href="struct.Plugin.html#method.start" title="Plugin::start"><code>Plugin::start</code></a>.</li>
+</ul>
+<p>If you’re not sure where to start, take a look at the <a href="struct.Plugin.html" title="Plugin"><code>Plugin</code></a> struct, its four important methods, and
+the trait bounds for each of them - those give an idea of what your plugin will need to implement.</p>
+<h2 id="logging-and-tracing" class="section-header"><a href="#logging-and-tracing">Logging and <code>tracing</code></a></h2>
+<p>The SDK provides a preconfigured <a href="../../tracing_subscriber/fmt/fmt_layer/struct.Layer.html" title="tracing_subscriber::fmt::Layer"><code>tracing_subscriber::fmt::Layer</code></a> which, when installed,
+will emit structured logs in a format understood by Grafana. Use the <a href="fn.layer.html" title="layer"><code>layer</code></a> function
+to get the <code>Layer</code>, and install it using <code>tracing_subscriber::Registry::with</code>. Alternatively
+use <a href="struct.Plugin.html#method.init_subscriber" title="Plugin::init_subscriber"><code>Plugin::init_subscriber</code></a> to automatically install a subscriber using the <code>RUST_LOG</code>
+environment variable to set the directive (defaulting to <code>info</code> if not set).</p>
+<p>Once the layer is installed, any logs emitted by the various <a href="https://docs.rs/log"><code>log</code></a> or <a href="../../tracing/index.html" title="tracing"><code>tracing</code></a> macros
+will be emitted to Grafana.</p>
+<h2 id="example" class="section-header"><a href="#example">Example</a></h2>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">grafana_plugin_sdk</span>::{<span class="ident">backend</span>, <span class="ident">data</span>, <span class="ident">prelude</span>::<span class="kw-2">*</span>};
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
+<span class="kw">use</span> <span class="ident">tonic::transport::Server</span>;
+<span class="kw">use</span> <span class="ident">tracing::info</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">struct</span> <span class="ident">MyPlugin</span>;
+
+<span class="doccomment">/// An error that may occur during a query.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This must store the `ref_id` of the query so that Grafana can line it up.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
+<span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error querying backend for query {ref_id}: {source}&quot;</span>)]</span>
+<span class="kw">struct</span> <span class="ident">QueryError</span> {
+    <span class="ident">source</span>: <span class="ident">data::FrameError</span>,
+    <span class="ident">ref_id</span>: <span class="ident">String</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">backend::DataQueryError</span> <span class="kw">for</span> <span class="ident">QueryError</span> {
+    <span class="kw">fn</span> <span class="ident">ref_id</span>(<span class="self">self</span>) -&gt; <span class="ident">String</span> {
+        <span class="self">self</span>.<span class="ident">ref_id</span>
+    }
+}
+
+<span class="attribute">#[<span class="ident">tonic::async_trait</span>]</span>
+<span class="kw">impl</span> <span class="ident">backend::DataService</span> <span class="kw">for</span> <span class="ident">MyPlugin</span> {
+
+    <span class="doccomment">/// The type of error that could be returned by an individual query.</span>
+    <span class="kw">type</span> <span class="ident">QueryError</span> <span class="op">=</span> <span class="ident">QueryError</span>;
+
+    <span class="doccomment">/// The type of iterator we&#39;re returning.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// In general the concrete type will be impossible to name in advance,</span>
+    <span class="doccomment">/// so the `backend::BoxDataResponseIter` type alias will be useful.</span>
+    <span class="kw">type</span> <span class="ident">Iter</span> <span class="op">=</span> <span class="ident">backend::BoxDataResponseIter</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::QueryError</span><span class="op">&gt;</span>;
+
+    <span class="doccomment">/// Respond to a request for data from Grafana.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This request will contain zero or more queries, as well as information</span>
+    <span class="doccomment">/// about the datasource instance on behalf of which this request is made,</span>
+    <span class="doccomment">/// such as address, credentials, etc.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Our plugin must respond to each query and return an iterator of `DataResponse`s,</span>
+    <span class="doccomment">/// which themselves can contain zero or more `Frame`s.</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">query_data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">request</span>: <span class="ident">backend::QueryDataRequest</span>) -&gt; <span class="ident"><span class="self">Self</span>::Iter</span> {
+        <span class="ident">Box::new</span>(
+            <span class="ident">request</span>.<span class="ident">queries</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> {
+                <span class="prelude-val">Ok</span>(<span class="ident">backend::DataResponse::new</span>(
+                    <span class="comment">// Include the ID of the query in the response.</span>
+                    <span class="ident">x</span>.<span class="ident">ref_id</span>.<span class="ident">clone</span>(),
+                    <span class="comment">// Return one or more frames.</span>
+                    <span class="comment">// A real implementation would fetch this data from a database</span>
+                    <span class="comment">// or something.</span>
+                    <span class="macro">vec!</span>[
+                        [
+                            [<span class="number">1_u32</span>, <span class="number">2</span>, <span class="number">3</span>].<span class="ident">into_field</span>(<span class="string">&quot;x&quot;</span>),
+                            [<span class="string">&quot;a&quot;</span>, <span class="string">&quot;b&quot;</span>, <span class="string">&quot;c&quot;</span>].<span class="ident">into_field</span>(<span class="string">&quot;y&quot;</span>),
+                        ]
+                        .<span class="ident">into_frame</span>(<span class="string">&quot;foo&quot;</span>)
+                        .<span class="ident">check</span>()
+                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">source</span><span class="op">|</span> <span class="ident">QueryError</span> {
+                            <span class="ident">ref_id</span>: <span class="ident">x</span>.<span class="ident">ref_id</span>,
+                            <span class="ident">source</span>,
+                        })<span class="question-mark">?</span>,
+                    ],
+                ))
+            })
+        )
+    }
+}
+
+<span class="attribute">#[<span class="ident">tokio::main</span>]</span>
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">std::error::Error</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="comment">// Initialize the plugin. This **must** be done first!</span>
+    <span class="kw">let</span> <span class="ident">listener</span> <span class="op">=</span> <span class="ident">backend::initialize</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+
+    <span class="comment">// Create our plugin struct. Any state, such as a database connection, should be</span>
+    <span class="comment">// held here, perhaps inside an `Arc` if required.</span>
+    <span class="kw">let</span> <span class="ident">plugin</span> <span class="op">=</span> <span class="ident">MyPlugin</span>;
+
+    <span class="comment">// Start the plugin executable using the `backend::Plugin`.</span>
+    <span class="ident">backend::Plugin::new</span>()
+        .<span class="ident">data_service</span>(<span class="ident">plugin</span>)
+        .<span class="ident">start</span>(<span class="ident">listener</span>)
+        .<span class="kw">await</span><span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(())
+}</code></pre></div>
+</div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.AppInstanceSettings.html" title="grafana_plugin_sdk::backend::AppInstanceSettings struct">AppInstanceSettings</a></div><div class="item-right docblock-short"><p>Settings for an app instance.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.CallResourceRequest.html" title="grafana_plugin_sdk::backend::CallResourceRequest struct">CallResourceRequest</a></div><div class="item-right docblock-short"><p>A request for a resource call.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.CheckHealthRequest.html" title="grafana_plugin_sdk::backend::CheckHealthRequest struct">CheckHealthRequest</a></div><div class="item-right docblock-short"><p>A request to check the health of a plugin.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.CheckHealthResponse.html" title="grafana_plugin_sdk::backend::CheckHealthResponse struct">CheckHealthResponse</a></div><div class="item-right docblock-short"><p>The response to a health check request.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.CollectMetricsRequest.html" title="grafana_plugin_sdk::backend::CollectMetricsRequest struct">CollectMetricsRequest</a></div><div class="item-right docblock-short"><p>A request to collect metrics about a plugin.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.CollectMetricsResponse.html" title="grafana_plugin_sdk::backend::CollectMetricsResponse struct">CollectMetricsResponse</a></div><div class="item-right docblock-short"><p>A response to a metric collection request.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.DataQuery.html" title="grafana_plugin_sdk::backend::DataQuery struct">DataQuery</a></div><div class="item-right docblock-short"><p>A query made by Grafana to the plugin as part of a <a href="struct.QueryDataRequest.html" title="QueryDataRequest"><code>QueryDataRequest</code></a>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.DataResponse.html" title="grafana_plugin_sdk::backend::DataResponse struct">DataResponse</a></div><div class="item-right docblock-short"><p>The results from a <a href="struct.DataQuery.html" title="DataQuery"><code>DataQuery</code></a>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.DataSourceInstanceSettings.html" title="grafana_plugin_sdk::backend::DataSourceInstanceSettings struct">DataSourceInstanceSettings</a></div><div class="item-right docblock-short"><p>Settings for a datasource instance.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.HCLogJson.html" title="grafana_plugin_sdk::backend::HCLogJson struct">HCLogJson</a></div><div class="item-right docblock-short"><p>A <a href="../../tracing/index.html" title="tracing"><code>tracing</code></a> event formatter which writes events in a format compatible with <a href="https://github.com/hashicorp/go-hclog">hclog</a>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.InitialData.html" title="grafana_plugin_sdk::backend::InitialData struct">InitialData</a></div><div class="item-right docblock-short"><p>Data returned from an initial request to subscribe to a stream.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.MetricsPayload.html" title="grafana_plugin_sdk::backend::MetricsPayload struct">MetricsPayload</a></div><div class="item-right docblock-short"><p>Metrics collected from a plugin as part of a collect metrics.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Plugin.html" title="grafana_plugin_sdk::backend::Plugin struct">Plugin</a></div><div class="item-right docblock-short"><p>Main entrypoint into the Grafana plugin SDK.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.PluginContext.html" title="grafana_plugin_sdk::backend::PluginContext struct">PluginContext</a></div><div class="item-right docblock-short"><p>Holds contextual information about a plugin request: Grafana org, user, and plugin instance settings.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.PublishStreamRequest.html" title="grafana_plugin_sdk::backend::PublishStreamRequest struct">PublishStreamRequest</a></div><div class="item-right docblock-short"><p>A request to publish data to a stream.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.PublishStreamResponse.html" title="grafana_plugin_sdk::backend::PublishStreamResponse struct">PublishStreamResponse</a></div><div class="item-right docblock-short"><p>The response to a stream publish request.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.QueryDataRequest.html" title="grafana_plugin_sdk::backend::QueryDataRequest struct">QueryDataRequest</a></div><div class="item-right docblock-short"><p>A request for data made by Grafana.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.RunStreamRequest.html" title="grafana_plugin_sdk::backend::RunStreamRequest struct">RunStreamRequest</a></div><div class="item-right docblock-short"><p>A request to ‘run’ a stream, i.e. begin streaming data.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.StreamPacket.html" title="grafana_plugin_sdk::backend::StreamPacket struct">StreamPacket</a></div><div class="item-right docblock-short"><p>A packet of data to be streamed back to the subscribed client.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.SubscribeStreamRequest.html" title="grafana_plugin_sdk::backend::SubscribeStreamRequest struct">SubscribeStreamRequest</a></div><div class="item-right docblock-short"><p>A request to subscribe to a stream.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.SubscribeStreamResponse.html" title="grafana_plugin_sdk::backend::SubscribeStreamResponse struct">SubscribeStreamResponse</a></div><div class="item-right docblock-short"><p>The response to a stream subscription request.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.TimeRange.html" title="grafana_plugin_sdk::backend::TimeRange struct">TimeRange</a></div><div class="item-right docblock-short"><p>The time range for a query.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.User.html" title="grafana_plugin_sdk::backend::User struct">User</a></div><div class="item-right docblock-short"><p>A Grafana user.</p>
+</div></div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ConversionError.html" title="grafana_plugin_sdk::backend::ConversionError enum">ConversionError</a></div><div class="item-right docblock-short"><p>Errors occurring when trying to interpret data passed from Grafana to this SDK.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Error.html" title="grafana_plugin_sdk::backend::Error enum">Error</a></div><div class="item-right docblock-short"><p>Errors returned by plugin backends.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.HealthStatus.html" title="grafana_plugin_sdk::backend::HealthStatus enum">HealthStatus</a></div><div class="item-right docblock-short"><p>The health status of a plugin.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.Role.html" title="grafana_plugin_sdk::backend::Role enum">Role</a></div><div class="item-right docblock-short"><p>A role within Grafana.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.SubscribeStreamStatus.html" title="grafana_plugin_sdk::backend::SubscribeStreamStatus enum">SubscribeStreamStatus</a></div><div class="item-right docblock-short"><p>The status of a subscribe stream response.</p>
+</div></div></div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.DataQueryError.html" title="grafana_plugin_sdk::backend::DataQueryError trait">DataQueryError</a></div><div class="item-right docblock-short"><p>Error supertrait used in <a href="trait.DataService.html#tymethod.query_data" title="DataService::query_data"><code>DataService::query_data</code></a>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.DataService.html" title="grafana_plugin_sdk::backend::DataService trait">DataService</a></div><div class="item-right docblock-short"><p>Used to respond for requests for data from datasources and app plugins.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.DiagnosticsService.html" title="grafana_plugin_sdk::backend::DiagnosticsService trait">DiagnosticsService</a></div><div class="item-right docblock-short"><p>Trait for services that provide a health check and/or metric collection endpoint.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.IntoHttpResponse.html" title="grafana_plugin_sdk::backend::IntoHttpResponse trait">IntoHttpResponse</a></div><div class="item-right docblock-short"><p>Trait indicating that a type can be fallibly converted into a <code>http::Response&lt;Bytes&gt;</code>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.ResourceService.html" title="grafana_plugin_sdk::backend::ResourceService trait">ResourceService</a></div><div class="item-right docblock-short"><p>Trait for plugins that can handle arbitrary resource requests.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.StreamService.html" title="grafana_plugin_sdk::backend::StreamService trait">StreamService</a></div><div class="item-right docblock-short"><p>Trait for plugins that wish to provide uni- or bi-directional streaming.</p>
+</div></div></div><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.initialize.html" title="grafana_plugin_sdk::backend::initialize fn">initialize</a></div><div class="item-right docblock-short"><p>Initialize the plugin, returning the <a href="../../tokio/net/tcp/listener/struct.TcpListener.html" title="TcpListener"><code>TcpListener</code></a> that the gRPC service should serve on.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.layer.html" title="grafana_plugin_sdk::backend::layer fn">layer</a></div><div class="item-right docblock-short"><p>Create a <code>tracing</code> <a href="../../tracing_subscriber/layer/trait.Layer.html" title="tracing_subscriber::Layer"><code>Layer</code></a> configured to log events in a format understood by Grafana.</p>
+</div></div></div><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="type" href="type.BoxDataResponseIter.html" title="grafana_plugin_sdk::backend::BoxDataResponseIter type">BoxDataResponseIter</a></div><div class="item-right docblock-short"><p>Type alias for a boxed iterator of query responses, useful for returning from <a href="trait.DataService.html#tymethod.query_data" title="DataService::query_data"><code>DataService::query_data</code></a>.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.BoxResourceFuture.html" title="grafana_plugin_sdk::backend::BoxResourceFuture type">BoxResourceFuture</a></div><div class="item-right docblock-short"><p>Type alias for a pinned, boxed future with a fallible HTTP response as output, with a custom error type.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.BoxResourceStream.html" title="grafana_plugin_sdk::backend::BoxResourceStream type">BoxResourceStream</a></div><div class="item-right docblock-short"><p>Type alias for a pinned, boxed stream of HTTP responses with a custom error type.</p>
+</div></div><div class="item-row"><div class="item-left module-item"><a class="type" href="type.BoxRunStream.html" title="grafana_plugin_sdk::backend::BoxRunStream type">BoxRunStream</a></div><div class="item-right docblock-short"><p>Type alias for a pinned, boxed stream of stream packets with a custom error type.</p>
+</div></div></div><h2 id="attributes" class="section-header"><a href="#attributes">Attribute Macros</a></h2>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="attr" href="attr.async_trait.html" title="grafana_plugin_sdk::backend::async_trait attr">async_trait</a></div><div class="item-right docblock-short"><p>Re-export of <code>async_trait</code> proc macro, so plugin implementations don’t have to import tonic manually.</p>
+</div></div></div></section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="grafana_plugin_sdk" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
+    <script src="../../main.js"></script>
+</body></html>

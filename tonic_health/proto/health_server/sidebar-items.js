@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["HealthServer",""]],"trait":[["Health","Generated trait containing gRPC methods that should be implemented for use with HealthServer."]]});

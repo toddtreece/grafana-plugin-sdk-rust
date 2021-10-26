@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Scope","The scope of a channel."]],"struct":[["Channel","The identifier of a pub/sub channel in Grafana Live."],["ChannelError","The error returned when parsing a channel."],["Namespace","The namespace of a channel."],["Path","The path of a channel."]]});

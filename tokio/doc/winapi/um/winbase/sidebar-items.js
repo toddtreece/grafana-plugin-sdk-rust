@@ -1,0 +1,1 @@
+initSidebarItems({"type":[["PIPE_CLIENT_END","See winapi::um::winbase::PIPE_CLIENT_END"],["PIPE_SERVER_END","See winapi::um::winbase::PIPE_SERVER_END"],["PIPE_TYPE_BYTE","See winapi::um::winbase::PIPE_TYPE_BYTE"],["PIPE_TYPE_MESSAGE","See winapi::um::winbase::PIPE_TYPE_MESSAGE"],["SECURITY_IDENTIFICATION","See winapi::um::winbase::SECURITY_IDENTIFICATION"]]});
