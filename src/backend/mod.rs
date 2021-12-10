@@ -116,6 +116,7 @@ use std::{collections::HashMap, fmt::Debug, io, net::SocketAddr, str::FromStr};
 
 use chrono::prelude::*;
 use futures_util::FutureExt;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use thiserror::Error;
 use tokio::net::TcpListener;
@@ -643,7 +644,7 @@ pub(self) fn read_json(jdoc: &[u8]) -> ConvertFromResult<Value> {
 }
 
 /// The time range for a query.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TimeRange {
     /// The start time of the query.
     pub from: DateTime<Utc>,
@@ -661,7 +662,7 @@ impl From<pluginv2::TimeRange> for TimeRange {
 }
 
 /// A role within Grafana.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Role {
     /// Admin users can perform any administrative action, such as adding and removing users and datasources.
     Admin,
@@ -684,7 +685,7 @@ impl FromStr for Role {
 }
 
 /// A Grafana user.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     /// The user's login.
     pub login: String,
@@ -712,7 +713,7 @@ impl TryFrom<pluginv2::User> for User {
 ///
 /// An app instance is an app plugin of a certain type that has been configured
 /// and enabled in a Grafana organisation.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct AppInstanceSettings {
     /// Includes the non-secret settings of the app instance (excluding datasource config).
     pub json_data: Value,
@@ -743,7 +744,7 @@ impl TryFrom<pluginv2::AppInstanceSettings> for AppInstanceSettings {
 /// and created in a Grafana organisation. For example, the 'datasource' may be
 /// the Prometheus datasource plugin, and there may be many configured Prometheus
 /// datasource instances configured in a Grafana organisation.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DataSourceInstanceSettings {
     /// The Grafana assigned numeric identifier of the the datasource instance.
     pub id: i64,
@@ -807,7 +808,7 @@ impl TryFrom<pluginv2::DataSourceInstanceSettings> for DataSourceInstanceSetting
 }
 
 /// Holds contextual information about a plugin request: Grafana org, user, and plugin instance settings.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PluginContext {
     /// The organisation ID from which the request originated.
     pub org_id: i64,

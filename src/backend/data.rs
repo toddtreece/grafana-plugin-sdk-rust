@@ -1,6 +1,7 @@
 //! SDK types and traits relevant to plugins that query data.
 use std::{collections::HashMap, time::Duration};
 
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
@@ -12,7 +13,7 @@ use crate::{
 ///
 /// Details of the request source can be found in `plugin_context`,
 /// while the actual plugins themselves are in `queries`.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct QueryDataRequest {
     /// Details of the plugin instance from which the request originated.
     ///
@@ -51,7 +52,7 @@ impl TryFrom<pluginv2::QueryDataRequest> for QueryDataRequest {
 /// A query made by Grafana to the plugin as part of a [`QueryDataRequest`].
 ///
 /// The `json` field contains any fields set by the plugin's UI.
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DataQuery {
     /// The unique identifier of the query, set by the frontend call.
     ///

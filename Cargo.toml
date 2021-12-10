@@ -10,7 +10,7 @@ description = "SDK for building Grafana backend plugins."
 
 [dependencies]
 arrow2 = { version = "0.7.0", features = ["io_ipc"] }
-chrono = "0.4.19"
+chrono = { version = "0.4.19", features = ["serde"] }
 futures-core = "0.3.17"
 futures-util = "0.3.17"
 grafana-plugin-sdk-macros = { version = "0.1.0", path = "./grafana-plugin-sdk-macros" }
