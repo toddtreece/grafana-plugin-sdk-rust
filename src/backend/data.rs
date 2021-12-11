@@ -52,7 +52,7 @@ impl TryFrom<pluginv2::QueryDataRequest> for QueryDataRequest {
 /// A query made by Grafana to the plugin as part of a [`QueryDataRequest`].
 ///
 /// The `json` field contains any fields set by the plugin's UI.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DataQuery {
     /// The unique identifier of the query, set by the frontend call.
     ///

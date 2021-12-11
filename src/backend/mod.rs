@@ -644,7 +644,7 @@ pub(self) fn read_json(jdoc: &[u8]) -> ConvertFromResult<Value> {
 }
 
 /// The time range for a query.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TimeRange {
     /// The start time of the query.
     pub from: DateTime<Utc>,
