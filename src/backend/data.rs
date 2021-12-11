@@ -13,7 +13,7 @@ use crate::{
 ///
 /// Details of the request source can be found in `plugin_context`,
 /// while the actual plugins themselves are in `queries`.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct QueryDataRequest {
     /// Details of the plugin instance from which the request originated.
     ///
