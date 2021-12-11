@@ -14,6 +14,7 @@ use crate::{
 /// Details of the request source can be found in `plugin_context`,
 /// while the actual plugins themselves are in `queries`.
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct QueryDataRequest {
     /// Details of the plugin instance from which the request originated.
     ///
@@ -53,10 +54,12 @@ impl TryFrom<pluginv2::QueryDataRequest> for QueryDataRequest {
 ///
 /// The `json` field contains any fields set by the plugin's UI.
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct DataQuery {
     /// The unique identifier of the query, set by the frontend call.
     ///
     /// This should be included in the corresponding [`DataResponse`].
+    #[serde(rename = "RefID")]
     pub ref_id: String,
 
     /// An identifier for the type of query.
@@ -76,6 +79,7 @@ pub struct DataQuery {
     /// The raw JSON query.
     ///
     /// This contains all of the other properties, as well as custom properties.
+    #[serde(rename = "JSON")]
     pub json: Value,
 }
 

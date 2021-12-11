@@ -645,6 +645,7 @@ pub(self) fn read_json(jdoc: &[u8]) -> ConvertFromResult<Value> {
 
 /// The time range for a query.
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct TimeRange {
     /// The start time of the query.
     pub from: DateTime<Utc>,
@@ -663,6 +664,7 @@ impl From<pluginv2::TimeRange> for TimeRange {
 
 /// A role within Grafana.
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub enum Role {
     /// Admin users can perform any administrative action, such as adding and removing users and datasources.
     Admin,
@@ -686,6 +688,7 @@ impl FromStr for Role {
 
 /// A Grafana user.
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct User {
     /// The user's login.
     pub login: String,
@@ -714,14 +717,17 @@ impl TryFrom<pluginv2::User> for User {
 /// An app instance is an app plugin of a certain type that has been configured
 /// and enabled in a Grafana organisation.
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct AppInstanceSettings {
     /// Includes the non-secret settings of the app instance (excluding datasource config).
+    #[serde(rename = "JSONData")]
     pub json_data: Value,
     /// Key-value pairs where the encrypted configuration in Grafana server have been
     /// decrypted before passing them to the plugin.
     ///
     /// This data is not accessible to the Grafana frontend after it has been set, and should
     /// be used for any secrets (such as API keys or passwords).
+    #[serde(rename = "DecryptedSecureJSONData")]
     pub decrypted_secure_json_data: HashMap<String, String>,
     /// The last time the configuration for the app plugin instance was updated.
     pub updated: DateTime<Utc>,
@@ -747,15 +753,18 @@ impl TryFrom<pluginv2::AppInstanceSettings> for AppInstanceSettings {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DataSourceInstanceSettings {
     /// The Grafana assigned numeric identifier of the the datasource instance.
+    #[serde(rename = "ID")]
     pub id: i64,
 
     /// The Grafana assigned string identifier of the the datasource instance.
+    #[serde(rename = "UID")]
     pub uid: String,
 
     /// The configured name of the datasource instance.
     pub name: String,
 
     /// The configured URL of a datasource instance (e.g. the URL of an API endpoint).
+    #[serde(rename = "URL")]
     pub url: String,
 
     /// A configured user for a datasource instance. This is not a Grafana user, rather an arbitrary string.
@@ -775,6 +784,7 @@ pub struct DataSourceInstanceSettings {
     /// The raw DataSourceConfig as JSON as stored by the Grafana server.
     ///
     /// It repeats the properties in this object and includes custom properties.
+    #[serde(rename = "JSONData")]
     pub json_data: Value,
 
     /// Key-value pairs where the encrypted configuration in Grafana server have been
@@ -782,6 +792,7 @@ pub struct DataSourceInstanceSettings {
     ///
     /// This data is not accessible to the Grafana frontend after it has been set, and should
     /// be used for any secrets (such as API keys or passwords).
+    #[serde(rename = "DecryptedSecureJSONData")]
     pub decrypted_secure_json_data: HashMap<String, String>,
 
     /// The last time the configuration for the datasource instance was updated.
@@ -809,11 +820,14 @@ impl TryFrom<pluginv2::DataSourceInstanceSettings> for DataSourceInstanceSetting
 
 /// Holds contextual information about a plugin request: Grafana org, user, and plugin instance settings.
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
 pub struct PluginContext {
     /// The organisation ID from which the request originated.
+    #[serde(rename = "OrgID")]
     pub org_id: i64,
 
     /// The ID of the plugin.
+    #[serde(rename = "PluginID")]
     pub plugin_id: String,
 
     /// Details about the Grafana user who made the request.
